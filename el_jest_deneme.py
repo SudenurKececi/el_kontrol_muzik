@@ -48,6 +48,14 @@ last_action_label = ""
 cooldown = 1.0  # aynı komutu 1 saniyeden sık göndermesin
 
 def trigger_action(label):
+    """
+    label:
+      - 'SES ARTTIR'
+      - 'SES AZALT'
+      - 'SONRAKI SARKI'
+      - 'ONCEKI SARKI'
+      - 'OYNA DURDUR'
+    """
     global last_action_time, last_action_label
 
     now = time.time()
@@ -70,6 +78,8 @@ def trigger_action(label):
             pyautogui.press("nexttrack")
         elif label == "ONCEKI SARKI":
             pyautogui.press("prevtrack")
+        elif label == "OYNA DURDUR":
+            pyautogui.press("playpause")
     except Exception as e:
         print("pyautogui hatası:", e)
 
@@ -129,14 +139,21 @@ with mp_hands.Hands(
 
                 # Jest -> komut
                 if hand_label == "Right":
+                    # Sağ el işaret → ses artır
                     if index_up and not thumb_up:
                         trigger_action("SES ARTTIR")
+                    # Sağ el başparmak → ses azalt
                     elif thumb_up and not index_up:
                         trigger_action("SES AZALT")
 
                 elif hand_label == "Left":
-                    if index_up and not thumb_up:
+                    # Sol el işaret+başparmak birlikte → oynat/duraklat
+                    if index_up and thumb_up:
+                        trigger_action("OYNA DURDUR")
+                    # Sol el işaret → sonraki şarkı
+                    elif index_up and not thumb_up:
                         trigger_action("SONRAKI SARKI")
+                    # Sol el başparmak → önceki şarkı
                     elif thumb_up and not index_up:
                         trigger_action("ONCEKI SARKI")
 
@@ -148,6 +165,25 @@ with mp_hands.Hands(
             cv2.putText(
                 display, text, (x, y),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2
+            )
+
+        # Sol üst köşeye küçük rehber
+        help_lines = [
+            "Sag el isaret  : Ses +",
+            "Sag el basparmak : Ses -",
+            "Sol el isaret  : Sonraki sarki",
+            "Sol el basparmak : Onceki sarki",
+            "Sol el isaret+basparmak : Oyna/Durdur"
+        ]
+        for i, line in enumerate(help_lines):
+            cv2.putText(
+                display,
+                line,
+                (10, 90 + i * 20),  # 90'dan basla, her satir asagi
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.5,
+                (200, 200, 200),
+                1
             )
 
         # Son aksiyonu ekranda kısa süre göster
